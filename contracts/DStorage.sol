@@ -4,7 +4,7 @@ pragma solidity >=0.4.21 < 0.9.0;
 
 contract DStorage{
     string public name ="DStorage";
-    uint fileCount=1;
+    uint public fileCount=1;
 
     struct File{
         uint fileId;

@@ -7,6 +7,9 @@ import Navbar from "./components/Navbar";
 import DStorage from "./contracts/DStorage.json";
 import ipfs from "./ipfs";
 import Main from "./components/Main";
+import DataTable from "./components/DataTable";
+
+
 
 const App = () => {
 
@@ -15,7 +18,12 @@ const App = () => {
   const [contract, setContract] = useState(null);
 
   const [description, setDescription] = useState('');
-  const [buffer, setBuffer] = useState(null);
+  const [fileInfo, setFileInfo] = useState({
+    buffer: [],
+    type: '',
+    name: ''
+  });
+  const [files, setFiles] = useState([]);
 
   useEffect(() => {
     let connect = async () => {
@@ -35,13 +43,23 @@ const App = () => {
     reader.readAsArrayBuffer(file);
 
     reader.onloadend = () => {
-      setBuffer(Buffer(reader.result));
+      setFileInfo({
+        buffer: Buffer(reader.result),
+        type: file.type,
+        name: file.name
+      })
     }
   }
 
   const upload = async (e) => {
     try {
-      console.log(description, buffer);
+      ipfs.files.add(fileInfo.buffer, async (error, result) => {
+        if (error) {
+          console.log(error)
+          return
+        }
+        await contract.methods.uploadFile(result[0].hash, result[0].size, fileInfo.type, fileInfo.name, description).send({ from: accounts });
+      })
     } catch (error) {
       console.log(error);
     }
@@ -55,6 +73,13 @@ const App = () => {
         let web3 = new Web3(window.ethereum);
         let accounts = await web3.eth.getAccounts();
         const contract = await getContract(web3, DStorage);
+        const fileCount = await contract.contract.methods.fileCount().call();
+
+        for (let i = 1; i < fileCount; i++) {
+          let file = await contract.contract.methods.files(i).call();
+          setFiles(prev => ([...prev, file]))
+        }
+        //TODO: Setting all the information
         setWeb3(web3);
         setContract(contract.contract);
         setAccounts(accounts[0]);
@@ -65,11 +90,12 @@ const App = () => {
       console.error("Please install Meta Mask")
     }
   }
-  console.log(contract, accounts);
+  console.log(files);
   return (
     <>
       <Navbar address={accounts} NavText="DStorage" />
       <Main handleDescriptionChange={handleDescriptionChange} handleBufferChange={handleBufferChange} upload={upload} description={description} />
+      <DataTable files={files} />
     </>
   );
 }
