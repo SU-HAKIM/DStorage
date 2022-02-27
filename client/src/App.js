@@ -3,13 +3,19 @@ import getContract from "./getWeb3";
 import Web3 from 'web3';
 import "./App.css";
 
+import Navbar from "./components/Navbar";
 import DStorage from "./contracts/DStorage.json";
+import ipfs from "./ipfs";
+import Main from "./components/Main";
 
 const App = () => {
 
   const [web3, setWeb3] = useState(null);
   const [accounts, setAccounts] = useState(null);
   const [contract, setContract] = useState(null);
+
+  const [description, setDescription] = useState('');
+  const [buffer, setBuffer] = useState(null);
 
   useEffect(() => {
     let connect = async () => {
@@ -18,6 +24,28 @@ const App = () => {
     connect()
   }, [])
 
+  const handleDescriptionChange = (e) => {
+    setDescription(e.target.value);
+  }
+
+  const handleBufferChange = (e) => {
+    let file = e.target.files[0];
+    let reader = new window.FileReader();
+
+    reader.readAsArrayBuffer(file);
+
+    reader.onloadend = () => {
+      setBuffer(Buffer(reader.result));
+    }
+  }
+
+  const upload = async (e) => {
+    try {
+      console.log(description, buffer);
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
 
   const connectToMetaMask = async () => {
@@ -40,7 +68,8 @@ const App = () => {
   console.log(contract, accounts);
   return (
     <>
-
+      <Navbar address={accounts} NavText="DStorage" />
+      <Main handleDescriptionChange={handleDescriptionChange} handleBufferChange={handleBufferChange} upload={upload} description={description} />
     </>
   );
 }
