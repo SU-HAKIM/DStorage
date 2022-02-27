@@ -1,13 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import getContract from "./getWeb3";
 import Web3 from 'web3';
 import "./App.css";
+
+import DStorage from "./contracts/DStorage.json";
 
 const App = () => {
 
   const [web3, setWeb3] = useState(null);
   const [accounts, setAccounts] = useState(null);
   const [contract, setContract] = useState(null);
+
+  useEffect(() => {
+    let connect = async () => {
+      await connectToMetaMask();
+    }
+    connect()
+  }, [])
+
 
 
   const connectToMetaMask = async () => {
@@ -16,10 +26,10 @@ const App = () => {
         await window.ethereum.request({ method: "eth_requestAccounts" });
         let web3 = new Web3(window.ethereum);
         let accounts = await web3.eth.getAccounts();
-        const contract = await getContract(web3);
+        const contract = await getContract(web3, DStorage);
         setWeb3(web3);
-        setContract(contract);
-        setAccounts(accounts);
+        setContract(contract.contract);
+        setAccounts(accounts[0]);
       } catch (error) {
         console.log(error);
       }
@@ -27,10 +37,11 @@ const App = () => {
       console.error("Please install Meta Mask")
     }
   }
+  console.log(contract, accounts);
   return (
-    <div className="App">
+    <>
 
-    </div>
+    </>
   );
 }
 
